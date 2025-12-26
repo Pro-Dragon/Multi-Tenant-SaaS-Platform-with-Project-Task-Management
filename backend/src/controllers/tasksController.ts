@@ -32,7 +32,7 @@ export async function createTask(req: AuthRequest, res: Response) {
 
     const project = await prisma.project.findUnique({ where: { id: projectId } });
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     const task = await prisma.task.create({
       data: {
@@ -63,7 +63,7 @@ export async function listTasks(req: AuthRequest, res: Response) {
 
     const project = await prisma.project.findUnique({ where: { id: projectId } });
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     const page = Math.max(1, parseInt((req.query.page as string) || '1'));
     const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '10')));
@@ -95,7 +95,7 @@ export async function updateTask(req: AuthRequest, res: Response) {
 
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
-    if (req.user.tenantId !== task.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== task.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     const data: any = {};
     if (title) data.title = title;
@@ -124,7 +124,7 @@ export async function deleteTask(req: AuthRequest, res: Response) {
 
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
-    if (req.user.tenantId !== task.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== task.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     await prisma.task.delete({ where: { id: taskId } });
     await logAudit({ tenantId: task.tenantId, userId: req.user.id, action: 'DELETE_TASK', entityType: 'task', entityId: taskId, ipAddress: req.ip });

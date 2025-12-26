@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 
 export function DashboardPage() {
-  const { user, token, logout, selectedTenantId, setSelectedTenantId } = useAuth();
+  const { user, token, logout, selectedTenantId, setSelectedTenantId, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({ users: 0, projects: 0, tasks: 0 });
   const [loading, setLoading] = useState(true);
@@ -14,25 +14,30 @@ export function DashboardPage() {
 
   useEffect(() => {
     // If super admin, fetch list of tenants and auto-select the first one
-    if (user && user.role === 'super_admin' && !user.tenantId) {
+    if (!authLoading && user && user.role === 'super_admin' && !user.tenantId) {
       setLoadingTenants(true);
+      console.log('Fetching tenants for super admin...');
       apiService.listTenants(token)
         .then(response => {
+          console.log('Tenants response:', response);
           // Response structure: { tenants: [...], pagination: {...} } OR just array for legacy
           const tenantsList = Array.isArray(response) ? response : (response.tenants || []);
+          console.log('Tenants list:', tenantsList);
           setTenants(tenantsList);
           // Auto-select first tenant if not already selected
           if (tenantsList.length > 0 && !selectedTenantId) {
+            console.log('Auto-selecting first tenant:', tenantsList[0].id);
             setSelectedTenantId(tenantsList[0].id);
           }
           setLoadingTenants(false);
         })
         .catch(err => {
           console.error('Failed to load tenants:', err);
+          setError('Failed to load tenants: ' + err.message);
           setLoadingTenants(false);
         });
     }
-  }, [user, token]);
+  }, [authLoading, user, token, selectedTenantId, setSelectedTenantId]);
 
   useEffect(() => {
     const fetchStats = async () => {

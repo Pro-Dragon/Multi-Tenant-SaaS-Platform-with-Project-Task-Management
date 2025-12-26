@@ -24,7 +24,7 @@ export async function createProject(req: AuthRequest, res: Response) {
   try {
     if (!req.user) return res.status(401).json({ success: false, message: 'Not authenticated' });
     if (req.user.role === 'user') return res.status(403).json({ success: false, message: 'Only tenant_admin can create projects' });
-    if (req.user.tenantId !== tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     // Check tenant limits
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
@@ -56,7 +56,7 @@ export async function listProjects(req: AuthRequest, res: Response) {
   const tenantId = req.params.tenantId;
   try {
     if (!req.user) return res.status(401).json({ success: false, message: 'Not authenticated' });
-    if (req.user.tenantId !== tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     const page = Math.max(1, parseInt((req.query.page as string) || '1'));
     const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '10')));
@@ -86,7 +86,7 @@ export async function updateProject(req: AuthRequest, res: Response) {
 
     const project = await prisma.project.findUnique({ where: { id: projectId } });
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     const data: any = {};
     if (name) data.name = name;
@@ -112,7 +112,7 @@ export async function deleteProject(req: AuthRequest, res: Response) {
 
     const project = await prisma.project.findUnique({ where: { id: projectId } });
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
-    if (req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
+    if (req.user.role !== 'super_admin' && req.user.tenantId !== project.tenantId) return res.status(403).json({ success: false, message: 'Forbidden' });
 
     await prisma.project.delete({ where: { id: projectId } });
     await logAudit({ tenantId: project.tenantId, userId: req.user.id, action: 'DELETE_PROJECT', entityType: 'project', entityId: projectId, ipAddress: req.ip });
