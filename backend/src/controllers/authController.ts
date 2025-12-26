@@ -105,13 +105,24 @@ export async function login(req: Request, res: Response) {
 
     const user = await prisma.user.findFirst({ where: { email, tenantId: tenantIdToUse } });
     if (!user) {
-      // Check super admin fallback when tenant not provided
+      // Check super admin fallback only when tenant not provided AND email appears to be reserved for super admin
       if (!tenant) {
         const superUser = await prisma.user.findFirst({ where: { email, role: 'super_admin' } });
         if (superUser && await bcrypt.compare(password, superUser.passwordHash)) {
           const token = signToken({ userId: superUser.id, tenantId: null, role: superUser.role });
           await logAudit({ tenantId: null, userId: superUser.id, action: 'LOGIN', entityType: 'user', entityId: superUser.id, ipAddress: req.ip });
           return res.json({ success: true, data: { user: { id: superUser.id, email: superUser.email, fullName: superUser.fullName, role: superUser.role, tenantId: null }, token, expiresIn: 86400 } });
+        }
+        
+        // If no super admin found, check if email exists in any tenant
+        const userInAnyTenant = await prisma.user.findFirst({ where: { email } });
+        if (userInAnyTenant) {
+          // Email exists in a tenant but no tenant was specified - ask user to specify tenant
+          return res.status(401).json({ 
+            success: false, 
+            message: 'This email is associated with a specific tenant. Please specify the tenant subdomain to login.',
+            code: 'TENANT_REQUIRED'
+          });
         }
       }
       return res.status(401).json({ success: false, message: 'Invalid credentials' });

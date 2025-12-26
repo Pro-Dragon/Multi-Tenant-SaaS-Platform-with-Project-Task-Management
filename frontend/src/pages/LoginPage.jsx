@@ -8,20 +8,30 @@ export default function LoginPage() {
   const [subdomain, setSubdomain] = useState('demo');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [tenantRequired, setTenantRequired] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setTenantRequired(false);
     setLoading(true);
     try {
-      // Don't send subdomain for superadmin (superadmin@system.com has no tenant)
+      // Always send subdomain to ensure we match the correct user
+      // Only skip subdomain for the specific superadmin email
       const subdomainToUse = email === 'superadmin@system.com' ? undefined : subdomain;
       await login(email, password, subdomainToUse);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Login failed');
+      const errorMsg = err.message || 'Login failed';
+      // Check if this is a tenant-required error
+      if (err.code === 'TENANT_REQUIRED' || errorMsg.includes('tenant subdomain')) {
+        setTenantRequired(true);
+        setError('This email is associated with a specific tenant. Please enter the tenant subdomain above.');
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -42,8 +52,15 @@ export default function LoginPage() {
             <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Tenant Subdomain (optional)</label>
-            <input className="input" type="text" value={subdomain} onChange={(e) => setSubdomain(e.target.value)} />
+            <label>Tenant Subdomain {tenantRequired && <span style={{ color: 'red' }}>*</span>}</label>
+            <input 
+              className="input" 
+              type="text" 
+              value={subdomain} 
+              onChange={(e) => setSubdomain(e.target.value)}
+              placeholder="e.g., demo, acme, etc."
+            />
+            {tenantRequired && <small style={{ color: '#666', marginTop: 4 }}>Required for this email</small>}
           </div>
           <button type="submit" disabled={loading} className="btn btn-primary full-width">
             {loading ? 'Logging in...' : 'Login'}
@@ -54,9 +71,9 @@ export default function LoginPage() {
         </p>
         <div className="card" style={{ marginTop: 16 }}>
           <h4 style={{ marginTop: 0, marginBottom: 8 }}>Demo Credentials</h4>
-          <p style={{ margin: '4px 0' }}><strong>Super Admin:</strong> superadmin@system.com / Admin@123</p>
-          <p style={{ margin: '4px 0' }}><strong>Tenant Admin:</strong> admin@demo.com / Demo@123</p>
-          <p style={{ margin: '4px 0' }}><strong>User:</strong> user1@demo.com / User@123</p>
+          <p style={{ margin: '4px 0' }}><strong>Super Admin:</strong> superadmin@system.com / Admin@123 (no subdomain)</p>
+          <p style={{ margin: '4px 0' }}><strong>Tenant Admin:</strong> admin@demo.com / Demo@123 (subdomain: demo)</p>
+          <p style={{ margin: '4px 0' }}><strong>User:</strong> user1@demo.com / User@123 (subdomain: demo)</p>
         </div>
       </div>
     </div>

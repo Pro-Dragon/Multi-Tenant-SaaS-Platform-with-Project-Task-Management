@@ -54,7 +54,14 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, tenantSubdomain })
     });
-    if (!res.ok) throw new Error('Login failed');
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      const error = new Error(errorData.message || 'Login failed');
+      error.code = errorData.code;
+      throw error;
+    }
+    
     const data = await res.json();
     const userData = data.data.user;
     // Extract tenantId from tenant object if it exists
