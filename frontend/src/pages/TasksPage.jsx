@@ -38,28 +38,35 @@ export function TasksPage() {
     try {
       setLoading(true);
       setError(''); // Clear error before fetching
-        const effectiveTenantId = user?.tenantId || selectedTenantId;
-        const projectsList = await apiService.listProjects(token, effectiveTenantId);
-        // Response structure: { projects: [...], total, pagination } OR just array for legacy
-        const projectsData = Array.isArray(projectsList) ? projectsList : (projectsList.projects || []);
-        setProjects(projectsData);
-        
-        if (selectedProjectId) {
-          const tasksList = await apiService.listTasks(token, selectedProjectId);
-          // Response structure: { tasks: [...], total, pagination } OR just array for legacy
-          const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
-          setTasks(tasksData);
-        } else {
-          setTasks([]);
-        }
-      } catch (err) {
-        setError('Failed to load data: ' + (err.message || 'Unknown error'));
-        setProjects([]);
-        setTasks([]);
-      } finally {
-        setLoading(false);
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      const projectsList = await apiService.listProjects(token, effectiveTenantId);
+      // Response structure: { projects: [...], total, pagination } OR just array for legacy
+      const projectsData = Array.isArray(projectsList) ? projectsList : (projectsList.projects || []);
+      setProjects(projectsData);
+      
+      // Auto-select first project if no project is selected (for super admin)
+      let projectToLoad = selectedProjectId;
+      if (!projectToLoad && projectsData.length > 0 && user?.role === 'super_admin') {
+        projectToLoad = projectsData[0].id;
+        setSelectedProjectId(projectsData[0].id);
       }
-    };
+      
+      if (projectToLoad) {
+        const tasksList = await apiService.listTasks(token, projectToLoad);
+        // Response structure: { tasks: [...], total, pagination } OR just array for legacy
+        const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
+        setTasks(tasksData);
+      } else {
+        setTasks([]);
+      }
+    } catch (err) {
+      setError('Failed to load data: ' + (err.message || 'Unknown error'));
+      setProjects([]);
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
