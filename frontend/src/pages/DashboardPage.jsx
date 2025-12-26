@@ -13,13 +13,18 @@ export function DashboardPage() {
   const [loadingTenants, setLoadingTenants] = useState(false);
 
   useEffect(() => {
-    // If super admin, fetch list of tenants
+    // If super admin, fetch list of tenants and auto-select the first one
     if (user && user.role === 'super_admin' && !user.tenantId) {
       setLoadingTenants(true);
       apiService.listTenants(token)
         .then(response => {
+          // Response structure: { tenants: [...], pagination: {...} } OR just array for legacy
           const tenantsList = Array.isArray(response) ? response : (response.tenants || []);
           setTenants(tenantsList);
+          // Auto-select first tenant if not already selected
+          if (tenantsList.length > 0 && !selectedTenantId) {
+            setSelectedTenantId(tenantsList[0].id);
+          }
           setLoadingTenants(false);
         })
         .catch(err => {
@@ -42,8 +47,11 @@ export function DashboardPage() {
           return;
         }
 
+        console.log('Fetching stats for tenant:', effectiveTenantId);
         const usersResponse = await apiService.listTenantUsers(token, effectiveTenantId);
+        console.log('Users response:', usersResponse);
         const projectsResponse = await apiService.listProjects(token, effectiveTenantId);
+        console.log('Projects response:', projectsResponse);
         
         // Handle paginated responses
         const usersList = Array.isArray(usersResponse) ? usersResponse : (usersResponse.users || []);
@@ -70,12 +78,15 @@ export function DashboardPage() {
           tasks: tasksCount,
         });
       } catch (err) {
-        setError('Failed to load stats');
+        console.error('Stats fetch error:', err);
+        setError('Failed to load stats: ' + (err.message || 'Unknown error'));
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
+    if (token && user) {
+      fetchStats();
+    }
   }, [token, user, selectedTenantId]);
 
   const handleLogout = () => {
@@ -125,25 +136,32 @@ export function DashboardPage() {
               <div className="card">
                 <p className="link-muted" style={{ margin: 0 }}>Users</p>
                 <p className="stat-value">{stats.users}</p>
-                <button onClick={() => navigate('/users')} className="btn btn-primary">Manage Users</button>
+                {user?.role === 'super_admin' ? (
+                  <button onClick={() => navigate('/users')} className="btn btn-secondary">View Users</button>
+                ) : (
+                  <button onClick={() => navigate('/users')} className="btn btn-primary">Manage Users</button>
+                )}
               </div>
               <div className="card">
                 <p className="link-muted" style={{ margin: 0 }}>Projects</p>
                 <p className="stat-value">{stats.projects}</p>
-                <button onClick={() => navigate('/projects')} className="btn btn-primary">Manage Projects</button>
+                {user?.role === 'super_admin' ? (
+                  <button onClick={() => navigate('/projects')} className="btn btn-secondary">View Projects</button>
+                ) : (
+                  <button onClick={() => navigate('/projects')} className="btn btn-primary">Manage Projects</button>
+                )}
               </div>
               <div className="card">
                 <p className="link-muted" style={{ margin: 0 }}>Tasks</p>
                 <p className="stat-value">{stats.tasks}</p>
-                <button onClick={() => navigate('/tasks')} className="btn btn-primary">View Tasks</button>
+                {user?.role === 'super_admin' ? (
+                  <button onClick={() => navigate('/tasks')} className="btn btn-secondary">View Tasks</button>
+                ) : (
+                  <button onClick={() => navigate('/tasks')} className="btn btn-primary">View Tasks</button>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="card" style={{ marginBottom: 24 }}>
-              <h3>Welcome, Super Admin</h3>
-              <p>Select a tenant above to view and manage their data, or log in with a tenant admin account for regular access.</p>
-            </div>
-          )}
+          ) : null}
           <div className="card">
             <h3>Account Info</h3>
             <p><strong>Email:</strong> {user?.email}</p>

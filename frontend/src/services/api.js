@@ -28,7 +28,12 @@ export const apiService = {
   // Users
   addUser: (token, email, password, fullName, role = 'user', tenantId = null) => {
     // Use explicit tenantId or get from token JWT payload
-    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    let tid = tenantId;
+    if (!tid) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      tid = payload.tenantId;
+    }
+    if (!tid) throw new Error('No tenantId available');
     return fetch(`${API_URL}/api/tenants/${tid}/users`, {
       method: 'POST',
       headers: getHeaders(token),
@@ -37,8 +42,12 @@ export const apiService = {
   },
 
   listTenantUsers: (token, tenantId = null) => {
-    // Use explicit tenantId or get from token JWT payload
-    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    let tid = tenantId;
+    if (!tid) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      tid = payload.tenantId;
+    }
+    if (!tid) throw new Error('No tenantId available');
     return fetch(`${API_URL}/api/tenants/${tid}/users`, {
       headers: getHeaders(token)
     }).then(handleResponse);
@@ -60,7 +69,12 @@ export const apiService = {
   // Projects
   createProject: (token, name, description, status = 'active', tenantId = null) => {
     // Use explicit tenantId or get from token JWT payload
-    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    let tid = tenantId;
+    if (!tid) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      tid = payload.tenantId;
+    }
+    if (!tid) throw new Error('No tenantId available');
     return fetch(`${API_URL}/api/tenants/${tid}/projects`, {
       method: 'POST',
       headers: getHeaders(token),
@@ -70,7 +84,12 @@ export const apiService = {
 
   listProjects: (token, tenantId = null) => {
     // Use explicit tenantId or get from token JWT payload
-    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    let tid = tenantId;
+    if (!tid) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      tid = payload.tenantId;
+    }
+    if (!tid) throw new Error('No tenantId available');
     return fetch(`${API_URL}/api/tenants/${tid}/projects`, {
       headers: getHeaders(token)
     }).then(handleResponse);

@@ -78,7 +78,7 @@ export function UsersPage() {
   return (
     <div className="page">
       <nav className="topbar">
-        <h1>Manage Users</h1>
+        <h1>{user?.role === 'super_admin' ? 'View Users' : 'Manage Users'}</h1>
         <div>
           <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ marginRight: 10 }}>Dashboard</button>
           <button onClick={() => { logout(); navigate('/login'); }} className="btn btn-secondary">Logout</button>
@@ -105,9 +105,11 @@ export function UsersPage() {
         </div>
       )}
 
-      {user?.role !== 'tenant_admin' && <div className="alert" style={{ color: '#b45309', borderColor: '#fcd34d', background: '#fffbeb' }}>Only tenant admins can manage users</div>}
+      {user?.role === 'super_admin' && <div className="alert" style={{ color: '#065f46', borderColor: '#86efac', background: '#f0fdf4' }}>📊 Read-only view - Super Admin cannot modify users</div>}
 
-      {showForm && (
+      {user?.role !== 'super_admin' && user?.role !== 'tenant_admin' && <div className="alert" style={{ color: '#b45309', borderColor: '#fcd34d', background: '#fffbeb' }}>Only tenant admins can manage users</div>}
+
+      {user?.role !== 'super_admin' && showForm && (
         <form onSubmit={handleAddUser} className="card" style={{ marginBottom: 20 }}>
           {submitError && <div className="alert error">{submitError}</div>}
           <div className="form-group">

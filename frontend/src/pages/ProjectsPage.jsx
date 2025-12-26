@@ -84,14 +84,16 @@ export function ProjectsPage() {
   return (
     <div className="page">
       <nav className="topbar">
-        <h1>Projects</h1>
+        <h1>{user?.role === 'super_admin' ? 'View Projects' : 'Projects'}</h1>
         <div>
           <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ marginRight: 10 }}>Dashboard</button>
           <button onClick={() => { logout(); navigate('/login'); }} className="btn btn-secondary">Logout</button>
         </div>
       </nav>
 
-      {showForm && (
+      {user?.role === 'super_admin' && <div className="alert" style={{ color: '#065f46', borderColor: '#86efac', background: '#f0fdf4' }}>📊 Read-only view - Super Admin cannot modify projects</div>}
+
+      {user?.role !== 'super_admin' && showForm && (
         <form onSubmit={handleCreateProject} className="card" style={{ marginBottom: 20 }}>
           {submitError && <div className="alert error">{submitError}</div>}
           <div className="form-group">
@@ -109,7 +111,7 @@ export function ProjectsPage() {
         </form>
       )}
 
-      {!showForm && (
+      {!showForm && user?.role !== 'super_admin' && (
         <button onClick={() => setShowForm(true)} className="btn btn-primary" style={{ marginBottom: 20 }}>+ Create Project</button>
       )}
 
@@ -123,11 +125,15 @@ export function ProjectsPage() {
               <p><strong>Status:</strong> <span className="badge">{proj.status}</span></p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
                 <button onClick={() => navigate(`/tasks?projectId=${proj.id}`)} className="btn btn-primary">View Tasks</button>
-                <select value={proj.status} onChange={(e) => handleUpdateStatus(proj.id, e.target.value)} className="input" style={{ width: '140px' }}>
-                  <option>active</option>
-                  <option>archived</option>
-                </select>
-                <button onClick={() => handleDeleteProject(proj.id)} className="btn btn-link" style={{ color: '#ef4444' }}>Delete</button>
+                {user?.role !== 'super_admin' && (
+                  <>
+                    <select value={proj.status} onChange={(e) => handleUpdateStatus(proj.id, e.target.value)} className="input" style={{ width: '140px' }}>
+                      <option>active</option>
+                      <option>archived</option>
+                    </select>
+                    <button onClick={() => handleDeleteProject(proj.id)} className="btn btn-link" style={{ color: '#ef4444' }}>Delete</button>
+                  </>
+                )}
               </div>
             </div>
           ))}

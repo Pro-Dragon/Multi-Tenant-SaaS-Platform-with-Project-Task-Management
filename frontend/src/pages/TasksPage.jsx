@@ -110,7 +110,7 @@ export function TasksPage() {
   return (
     <div className="page">
       <nav className="topbar">
-        <h1>Tasks</h1>
+        <h1>{user?.role === 'super_admin' ? 'View Tasks' : 'Tasks'}</h1>
         <div>
           <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ marginRight: 10 }}>Dashboard</button>
           <button onClick={() => { logout(); navigate('/login'); }} className="btn btn-secondary">Logout</button>
@@ -127,7 +127,9 @@ export function TasksPage() {
         </select>
       </div>
 
-      {showForm && (
+      {user?.role === 'super_admin' && <div className="alert" style={{ color: '#065f46', borderColor: '#86efac', background: '#f0fdf4' }}>📊 Read-only view - Super Admin cannot modify tasks</div>}
+
+      {user?.role !== 'super_admin' && showForm && (
         <form onSubmit={handleCreateTask} className="card" style={{ marginBottom: 20 }}>
           {submitError && <div className="alert error">{submitError}</div>}
           <div className="form-group">
@@ -172,7 +174,7 @@ export function TasksPage() {
         </form>
       )}
 
-      {!showForm && (
+      {!showForm && user?.role !== 'super_admin' && (
         <button onClick={() => setShowForm(true)} className="btn btn-primary" style={{ marginBottom: 20 }}>+ Create Task</button>
       )}
 
@@ -195,14 +197,20 @@ export function TasksPage() {
                 <td>{projects.find((p) => p.id === task.projectId)?.name || 'N/A'}</td>
                 <td><span className="badge">{task.priority}</span></td>
                 <td>
-                  <select value={task.status} onChange={(e) => handleUpdateStatus(task.id, e.target.value)} className="input" style={{ width: '150px' }}>
-                    <option>pending</option>
-                    <option>in_progress</option>
-                    <option>completed</option>
-                  </select>
+                  {user?.role !== 'super_admin' ? (
+                    <select value={task.status} onChange={(e) => handleUpdateStatus(task.id, e.target.value)} className="input" style={{ width: '150px' }}>
+                      <option>pending</option>
+                      <option>in_progress</option>
+                      <option>completed</option>
+                    </select>
+                  ) : (
+                    <span className="badge">{task.status}</span>
+                  )}
                 </td>
                 <td className="table-actions">
-                  <button onClick={() => handleDeleteTask(task.id)} className="btn btn-link" style={{ color: '#ef4444' }}>Delete</button>
+                  {user?.role !== 'super_admin' && (
+                    <button onClick={() => handleDeleteTask(task.id)} className="btn btn-link" style={{ color: '#ef4444' }}>Delete</button>
+                  )}
                 </td>
               </tr>
             ))}
