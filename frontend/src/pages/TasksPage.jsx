@@ -53,12 +53,28 @@ export function TasksPage() {
         setHasUserSelectedProject(true);
       }
       
-      // Fetch tasks only if a specific project is selected
+      // Fetch tasks - either from a specific project or from all projects
       if (projectToLoad) {
+        // Fetch tasks from specific project
         const tasksList = await apiService.listTasks(token, projectToLoad);
         // Response structure: { tasks: [...], total, pagination } OR just array for legacy
         const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
         setTasks(tasksData);
+      } else if (projectsData.length > 0) {
+        // Fetch tasks from all projects when "All Projects" is selected
+        const allTasks = [];
+        for (const project of projectsData) {
+          try {
+            const tasksList = await apiService.listTasks(token, project.id);
+            const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
+            allTasks.push(...tasksData);
+          } catch (err) {
+            console.log('Failed to fetch tasks for project', project.id);
+          }
+        }
+        // Sort all tasks by creation date (newest first)
+        allTasks.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setTasks(allTasks);
       } else {
         setTasks([]);
       }
