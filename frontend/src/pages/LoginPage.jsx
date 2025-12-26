@@ -18,9 +18,9 @@ export default function LoginPage() {
     setTenantRequired(false);
     setLoading(true);
     try {
-      // Always send subdomain to ensure we match the correct user
-      // Only skip subdomain for the specific superadmin email
-      const subdomainToUse = email === 'superadmin@system.com' ? undefined : subdomain;
+      // Send subdomain if provided, regardless of email
+      // This allows logging in with same email to different tenants
+      const subdomainToUse = subdomain || undefined;
       await login(email, password, subdomainToUse);
       navigate('/dashboard');
     } catch (err) {

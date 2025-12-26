@@ -89,26 +89,37 @@ export async function login(req: Request, res: Response) {
   const { email, password, tenantSubdomain, tenantId } = parsed.data;
 
   try {
+    console.log('[LOGIN] Attempt:', { email, tenantSubdomain, tenantId, hasPassword: !!password });
     let tenant = null;
 
     if (tenantSubdomain) {
+      console.log('[LOGIN] Looking for tenant with subdomain:', tenantSubdomain);
       tenant = await prisma.tenant.findUnique({ where: { subdomain: tenantSubdomain } });
+      console.log('[LOGIN] Tenant found:', { id: tenant?.id, name: tenant?.name, subdomain: tenant?.subdomain });
       if (!tenant) return res.status(404).json({ success: false, message: 'Tenant not found' });
       if (tenant.status !== 'active') return res.status(403).json({ success: false, message: 'Tenant is not active' });
     } else if (tenantId) {
+      console.log('[LOGIN] Looking for tenant with ID:', tenantId);
       tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      console.log('[LOGIN] Tenant found:', { id: tenant?.id, name: tenant?.name });
       if (!tenant) return res.status(404).json({ success: false, message: 'Tenant not found' });
       if (tenant.status !== 'active') return res.status(403).json({ success: false, message: 'Tenant is not active' });
     }
 
     const tenantIdToUse = tenant ? tenant.id : null;
+    console.log('[LOGIN] Looking for user with email:', { email, tenantId: tenantIdToUse });
 
     const user = await prisma.user.findFirst({ where: { email, tenantId: tenantIdToUse } });
+    console.log('[LOGIN] User found in tenant:', { exists: !!user, role: user?.role, tenantId: user?.tenantId });
+    
     if (!user) {
-      // Check super admin fallback only when tenant not provided AND email appears to be reserved for super admin
+      // Only check super admin fallback when NO tenant was specified
       if (!tenant) {
+        console.log('[LOGIN] No user found and no tenant specified, checking for super_admin');
         const superUser = await prisma.user.findFirst({ where: { email, role: 'super_admin' } });
+        console.log('[LOGIN] Super admin found:', { exists: !!superUser, email: superUser?.email });
         if (superUser && await bcrypt.compare(password, superUser.passwordHash)) {
+          console.log('[LOGIN] Password matches super admin, logging in');
           const token = signToken({ userId: superUser.id, tenantId: null, role: superUser.role });
           await logAudit({ tenantId: null, userId: superUser.id, action: 'LOGIN', entityType: 'user', entityId: superUser.id, ipAddress: req.ip });
           return res.json({ success: true, data: { user: { id: superUser.id, email: superUser.email, fullName: superUser.fullName, role: superUser.role, tenantId: null }, token, expiresIn: 86400 } });
@@ -116,21 +127,33 @@ export async function login(req: Request, res: Response) {
         
         // If no super admin found, check if email exists in any tenant
         const userInAnyTenant = await prisma.user.findFirst({ where: { email } });
+        console.log('[LOGIN] User in any tenant:', { exists: !!userInAnyTenant, tenantId: userInAnyTenant?.tenantId });
         if (userInAnyTenant) {
           // Email exists in a tenant but no tenant was specified - ask user to specify tenant
+          console.log('[LOGIN] Email exists in tenant, requiring subdomain');
           return res.status(401).json({ 
             success: false, 
             message: 'This email is associated with a specific tenant. Please specify the tenant subdomain to login.',
             code: 'TENANT_REQUIRED'
           });
         }
+      } else {
+        // Tenant was specified but user not found in that tenant
+        console.log('[LOGIN] Tenant specified but user not found, returning error');
+        return res.status(401).json({ success: false, message: 'Invalid credentials for this tenant' });
       }
+      console.log('[LOGIN] User not found and no fallback matched');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    console.log('[LOGIN] User found, checking password');
     const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    if (!match) {
+      console.log('[LOGIN] Password mismatch');
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
 
+    console.log('[LOGIN] Login successful for:', { userId: user.id, email: user.email, role: user.role, tenantId: user.tenantId });
     const token = signToken({ userId: user.id, tenantId: user.tenantId, role: user.role });
 
     await logAudit({ tenantId: user.tenantId, userId: user.id, action: 'LOGIN', entityType: 'user', entityId: user.id, ipAddress: req.ip });
