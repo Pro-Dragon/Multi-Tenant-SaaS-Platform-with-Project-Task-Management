@@ -103,7 +103,12 @@ export function DashboardPage() {
     <div className="page">
       <nav className="topbar">
         <h1>Dashboard</h1>
-        <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
+        <div>
+          {(user?.role === 'tenant_admin' || user?.role === 'super_admin') && (
+            <button onClick={() => navigate('/settings')} className="btn btn-secondary" style={{ marginRight: 10 }}>Settings</button>
+          )}
+          <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
+        </div>
       </nav>
       {/* Super Admin Tenant Selector */}
       {user && user.role === 'super_admin' && !user.tenantId && (

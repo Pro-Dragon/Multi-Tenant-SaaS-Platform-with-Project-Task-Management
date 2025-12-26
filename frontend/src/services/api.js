@@ -137,5 +137,12 @@ export const apiService = {
   getTenant: (token, tenantId) =>
     fetch(`${API_URL}/api/tenants/${tenantId}`, {
       headers: getHeaders(token)
+    }).then(handleResponse),
+
+  updateTenant: (token, tenantId, data) =>
+    fetch(`${API_URL}/api/tenants/${tenantId}`, {
+      method: 'PUT',
+      headers: getHeaders(token),
+      body: JSON.stringify(data)
     }).then(handleResponse)
 };

@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { UsersPage } from './pages/UsersPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { TasksPage } from './pages/TasksPage'
+import { SettingsPage } from './pages/SettingsPage'
 
 function AppRouter() {
   const { loading } = useAuth()
@@ -22,6 +23,7 @@ function AppRouter() {
       <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
       <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
       <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" />} />
     </Routes>
   )
