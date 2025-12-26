@@ -117,13 +117,11 @@ export function DashboardPage() {
               {tenants.map(tenant => (
                 <button
                   key={tenant.id}
-                  onClick={() => setSelectedTenantId(tenant.id)}
-                  className={`btn ${selectedTenantId === tenant.id ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{
-                    backgroundColor: selectedTenantId === tenant.id ? '#1d4ed8' : '#fff',
-                    color: selectedTenantId === tenant.id ? '#fff' : '#000',
-                    border: selectedTenantId === tenant.id ? '2px solid #1d4ed8' : '1px solid #d1d5db'
+                  onClick={() => {
+                    console.log('Selecting tenant:', tenant.id, tenant.name);
+                    setSelectedTenantId(tenant.id);
                   }}
+                  className={selectedTenantId === tenant.id ? 'btn btn-primary' : 'btn btn-secondary'}
                 >
                   {tenant.name} ({tenant.subdomain})
                 </button>
@@ -131,6 +129,11 @@ export function DashboardPage() {
             </div>
           ) : (
             <p>No tenants available</p>
+          )}
+          {selectedTenantId && (
+            <p style={{ color: '#92400e', marginTop: 12, fontWeight: 'bold' }}>
+              ✓ Selected: {tenants.find(t => t.id === selectedTenantId)?.name}
+            </p>
           )}
         </div>
       )}
