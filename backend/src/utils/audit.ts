@@ -9,7 +9,9 @@ export async function logAudit({ tenantId, userId, action, entityType, entityId,
   ipAddress?: string | null;
 }) {
   try {
-    if (!tenantId) tenantId = 'system'; // fallback for super-admin actions
+    // Skip audit logging for system/super-admin actions (no tenantId)
+    if (!tenantId) return;
+    
     await prisma.auditLog.create({ data: { tenantId: tenantId as string, userId: userId || null, action, entityType, entityId, ipAddress } });
   } catch (err) {
     console.error('Failed to write audit log', err);
