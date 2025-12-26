@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 
 export function TasksPage() {
-  const { user, token, logout, loading: authLoading } = useAuth();
+  const { user, token, logout, loading: authLoading, selectedTenantId } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -19,25 +19,27 @@ export function TasksPage() {
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
 
   useEffect(() => {
-    // Only fetch data after auth is done loading, we have token, user, and user has tenantId
+    // Only fetch data after auth is done loading, we have token, user, and either user has tenantId or super admin has selected one
     if (!authLoading) {
-      if (token && user && user.tenantId) {
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      if (token && user && effectiveTenantId) {
         fetchData();
       } else if (!token) {
         setLoading(false);
         setError('Not authenticated');
-      } else if (token && user && !user.tenantId) {
+      } else if (token && user && !effectiveTenantId) {
         setLoading(false);
-        setError('Tasks management is only available for tenant members');
+        setError('Please select a tenant to manage tasks (Dashboard > Select Tenant)');
       }
     }
-  }, [authLoading, token, user, selectedProjectId]);
+  }, [authLoading, token, user, selectedTenantId, selectedProjectId]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(''); // Clear error before fetching
-        const projectsList = await apiService.listProjects(token);
+        const effectiveTenantId = user?.tenantId || selectedTenantId;
+        const projectsList = await apiService.listProjects(token, effectiveTenantId);
         // Response structure: { projects: [...], total, pagination } OR just array for legacy
         const projectsData = Array.isArray(projectsList) ? projectsList : (projectsList.projects || []);
         setProjects(projectsData);

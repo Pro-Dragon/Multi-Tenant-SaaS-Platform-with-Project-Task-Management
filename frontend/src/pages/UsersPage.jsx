@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 
 export function UsersPage() {
-  const { user, token, logout, loading: authLoading } = useAuth();
+  const { user, token, logout, loading: authLoading, selectedTenantId } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,25 +15,27 @@ export function UsersPage() {
   const [newUserPassword, setNewUserPassword] = useState('');
 
   useEffect(() => {
-    // Only fetch users after auth is done loading, we have token, user, and user has tenantId
+    // Only fetch users after auth is done loading, we have token, user, and either user has tenantId or super admin has selected one
     if (!authLoading) {
-      if (token && user && user.tenantId) {
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      if (token && user && effectiveTenantId) {
         fetchUsers();
       } else if (!token) {
         setLoading(false);
         setError('Not authenticated');
-      } else if (token && user && !user.tenantId) {
+      } else if (token && user && !effectiveTenantId) {
         setLoading(false);
-        setError('Users management is only available for tenant members');
+        setError('Please select a tenant to manage users (Dashboard > Select Tenant)');
       }
     }
-  }, [authLoading, token, user]);
+  }, [authLoading, token, user, selectedTenantId]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(''); // Clear error before fetching
-      const response = await apiService.listTenantUsers(token);
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      const response = await apiService.listTenantUsers(token, effectiveTenantId);
       // Response structure: { users: [...], total: N, pagination: {...} } OR just array for legacy
       const usersList = Array.isArray(response) ? response : (response.users || []);
       setUsers(usersList);
@@ -51,7 +53,8 @@ export function UsersPage() {
     try {
       // Generate a random temporary password
       const tempPassword = Math.random().toString(36).slice(-10) + 'T1!';
-      await apiService.addUser(token, formData.email, tempPassword, formData.fullName, formData.role);
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      await apiService.addUser(token, formData.email, tempPassword, formData.fullName, formData.role, effectiveTenantId);
       // Show the temporary password to the admin
       setNewUserPassword(tempPassword);
       setFormData({ email: '', fullName: '', role: 'user' });

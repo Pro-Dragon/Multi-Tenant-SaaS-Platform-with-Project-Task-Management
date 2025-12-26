@@ -6,6 +6,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTenantId, setSelectedTenantId] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
@@ -88,6 +89,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('authToken');
     setToken(null);
     setUser(null);
+    setSelectedTenantId(null);
   };
 
   const registerTenant = async (tenantName, subdomain, adminEmail, adminPassword, adminFullName) => {
@@ -103,7 +105,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, registerTenant, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, registerTenant, loading, selectedTenantId, setSelectedTenantId }}>
       {children}
     </AuthContext.Provider>
   );

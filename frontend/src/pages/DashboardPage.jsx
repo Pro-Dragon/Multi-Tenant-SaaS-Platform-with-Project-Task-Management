@@ -4,24 +4,46 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 
 export function DashboardPage() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, selectedTenantId, setSelectedTenantId } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({ users: 0, projects: 0, tasks: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tenants, setTenants] = useState([]);
+  const [loadingTenants, setLoadingTenants] = useState(false);
+
+  useEffect(() => {
+    // If super admin, fetch list of tenants
+    if (user && user.role === 'super_admin' && !user.tenantId) {
+      setLoadingTenants(true);
+      apiService.listTenants(token)
+        .then(response => {
+          const tenantsList = Array.isArray(response) ? response : (response.tenants || []);
+          setTenants(tenantsList);
+          setLoadingTenants(false);
+        })
+        .catch(err => {
+          console.error('Failed to load tenants:', err);
+          setLoadingTenants(false);
+        });
+    }
+  }, [user, token]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Superadmin (no tenantId) cannot access tenant-specific endpoints
-        if (!user?.tenantId) {
+        // Determine which tenant to fetch data for
+        const effectiveTenantId = user?.tenantId || selectedTenantId;
+        
+        // If no tenant selected, clear stats
+        if (!effectiveTenantId) {
           setStats({ users: 0, projects: 0, tasks: 0 });
           setLoading(false);
           return;
         }
 
-        const usersResponse = await apiService.listTenantUsers(token);
-        const projectsResponse = await apiService.listProjects(token);
+        const usersResponse = await apiService.listTenantUsers(token, effectiveTenantId);
+        const projectsResponse = await apiService.listProjects(token, effectiveTenantId);
         
         // Handle paginated responses
         const usersList = Array.isArray(usersResponse) ? usersResponse : (usersResponse.users || []);
@@ -54,7 +76,7 @@ export function DashboardPage() {
       }
     };
     fetchStats();
-  }, [token, user]);
+  }, [token, user, selectedTenantId]);
 
   const handleLogout = () => {
     logout();
@@ -67,9 +89,38 @@ export function DashboardPage() {
         <h1>Dashboard</h1>
         <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
       </nav>
+      {/* Super Admin Tenant Selector */}
+      {user && user.role === 'super_admin' && !user.tenantId && (
+        <div className="card" style={{ marginBottom: 24, backgroundColor: '#fef3c7', borderColor: '#f59e0b' }}>
+          <h3 style={{ marginTop: 0, color: '#92400e' }}>🔐 Super Admin Mode</h3>
+          <p style={{ color: '#78350f' }}>Select a tenant to view and manage their data:</p>
+          {loadingTenants ? (
+            <p>Loading tenants...</p>
+          ) : tenants.length > 0 ? (
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {tenants.map(tenant => (
+                <button
+                  key={tenant.id}
+                  onClick={() => setSelectedTenantId(tenant.id)}
+                  className={`btn ${selectedTenantId === tenant.id ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{
+                    backgroundColor: selectedTenantId === tenant.id ? '#1d4ed8' : '#fff',
+                    color: selectedTenantId === tenant.id ? '#fff' : '#000',
+                    border: selectedTenantId === tenant.id ? '2px solid #1d4ed8' : '1px solid #d1d5db'
+                  }}
+                >
+                  {tenant.name} ({tenant.subdomain})
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p>No tenants available</p>
+          )}
+        </div>
+      )}
       {loading ? <p>Loading...</p> : error ? <div className="alert error">{error}</div> : (
         <>
-          {user?.tenantId ? (
+          {(user?.tenantId || selectedTenantId) ? (
             <div className="grid grid-3" style={{ marginBottom: 24 }}>
               <div className="card">
                 <p className="link-muted" style={{ margin: 0 }}>Users</p>
@@ -90,7 +141,7 @@ export function DashboardPage() {
           ) : (
             <div className="card" style={{ marginBottom: 24 }}>
               <h3>Welcome, Super Admin</h3>
-              <p>Superadmin users have dashboard-only access. To manage projects, users, and tasks, please log in with a tenant admin account.</p>
+              <p>Select a tenant above to view and manage their data, or log in with a tenant admin account for regular access.</p>
             </div>
           )}
           <div className="card">

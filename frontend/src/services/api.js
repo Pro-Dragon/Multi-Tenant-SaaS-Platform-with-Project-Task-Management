@@ -19,20 +19,27 @@ async function handleResponse(response) {
 }
 
 export const apiService = {
+  // Tenants
+  listTenants: (token) =>
+    fetch(`${API_URL}/api/tenants`, {
+      headers: getHeaders(token)
+    }).then(handleResponse),
+
   // Users
-  addUser: (token, email, password, fullName, role = 'user') => {
-    // Get tenant ID from token JWT payload
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return fetch(`${API_URL}/api/tenants/${payload.tenantId}/users`, {
+  addUser: (token, email, password, fullName, role = 'user', tenantId = null) => {
+    // Use explicit tenantId or get from token JWT payload
+    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    return fetch(`${API_URL}/api/tenants/${tid}/users`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify({ email, password, fullName, role })
     }).then(handleResponse);
   },
 
-  listTenantUsers: (token) => {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return fetch(`${API_URL}/api/tenants/${payload.tenantId}/users`, {
+  listTenantUsers: (token, tenantId = null) => {
+    // Use explicit tenantId or get from token JWT payload
+    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    return fetch(`${API_URL}/api/tenants/${tid}/users`, {
       headers: getHeaders(token)
     }).then(handleResponse);
   },
@@ -51,18 +58,20 @@ export const apiService = {
     }).then(handleResponse),
 
   // Projects
-  createProject: (token, name, description, status = 'active') => {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return fetch(`${API_URL}/api/tenants/${payload.tenantId}/projects`, {
+  createProject: (token, name, description, status = 'active', tenantId = null) => {
+    // Use explicit tenantId or get from token JWT payload
+    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    return fetch(`${API_URL}/api/tenants/${tid}/projects`, {
       method: 'POST',
       headers: getHeaders(token),
       body: JSON.stringify({ name, description, status })
     }).then(handleResponse);
   },
 
-  listProjects: (token) => {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return fetch(`${API_URL}/api/tenants/${payload.tenantId}/projects`, {
+  listProjects: (token, tenantId = null) => {
+    // Use explicit tenantId or get from token JWT payload
+    const tid = tenantId || JSON.parse(atob(token.split('.')[1])).tenantId;
+    return fetch(`${API_URL}/api/tenants/${tid}/projects`, {
       headers: getHeaders(token)
     }).then(handleResponse);
   },
@@ -106,7 +115,6 @@ export const apiService = {
       headers: getHeaders(token)
     }).then(handleResponse),
 
-  // Tenants
   getTenant: (token, tenantId) =>
     fetch(`${API_URL}/api/tenants/${tenantId}`, {
       headers: getHeaders(token)

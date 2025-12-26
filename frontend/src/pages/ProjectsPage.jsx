@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 
 export function ProjectsPage() {
-  const { user, token, logout, loading: authLoading } = useAuth();
+  const { user, token, logout, loading: authLoading, selectedTenantId } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,25 +14,27 @@ export function ProjectsPage() {
   const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
-    // Only fetch projects after auth is done loading, we have token, user, and user has tenantId
+    // Only fetch projects after auth is done loading, we have token, user, and either user has tenantId or super admin has selected one
     if (!authLoading) {
-      if (token && user && user.tenantId) {
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      if (token && user && effectiveTenantId) {
         fetchProjects();
       } else if (!token) {
         setLoading(false);
         setError('Not authenticated');
-      } else if (token && user && !user.tenantId) {
+      } else if (token && user && !effectiveTenantId) {
         setLoading(false);
-        setError('Projects management is only available for tenant members');
+        setError('Please select a tenant to manage projects (Dashboard > Select Tenant)');
       }
     }
-  }, [authLoading, token, user]);
+  }, [authLoading, token, user, selectedTenantId]);
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
       setError(''); // Clear error before fetching
-      const response = await apiService.listProjects(token);
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      const response = await apiService.listProjects(token, effectiveTenantId);
       // Response structure: { projects: [...], total: N, pagination: {...} } OR just array for legacy
       const projectsList = Array.isArray(response) ? response : (response.projects || []);
       setProjects(projectsList);
@@ -48,7 +50,8 @@ export function ProjectsPage() {
     e.preventDefault();
     setSubmitError('');
     try {
-      await apiService.createProject(token, formData.name, formData.description, 'active');
+      const effectiveTenantId = user?.tenantId || selectedTenantId;
+      await apiService.createProject(token, formData.name, formData.description, 'active', effectiveTenantId);
       setFormData({ name: '', description: '' });
       setShowForm(false);
       fetchProjects();
