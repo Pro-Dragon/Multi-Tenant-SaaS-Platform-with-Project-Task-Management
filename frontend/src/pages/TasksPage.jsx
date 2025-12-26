@@ -14,7 +14,7 @@ export function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ title: '', description: '', projectId, priority: 'medium', status: 'pending' });
+  const [formData, setFormData] = useState({ title: '', description: '', projectId, priority: 'medium', status: 'todo' });
   const [submitError, setSubmitError] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   const [hasUserSelectedProject, setHasUserSelectedProject] = useState(false);
@@ -96,7 +96,7 @@ export function TasksPage() {
         return;
       }
       await apiService.createTask(token, formData.title, formData.description, formData.projectId, formData.priority, formData.status);
-      setFormData({ title: '', description: '', projectId: selectedProjectId, priority: 'medium', status: 'pending' });
+      setFormData({ title: '', description: '', projectId: selectedProjectId, priority: 'medium', status: 'todo' });
       setShowForm(false);
       // Refresh data to show the new task
       await fetchData();
@@ -184,7 +184,7 @@ export function TasksPage() {
             <div className="form-group">
               <label>Status</label>
               <select className="input" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
-                <option>pending</option>
+                <option>todo</option>
                 <option>in_progress</option>
                 <option>completed</option>
               </select>
@@ -222,7 +222,7 @@ export function TasksPage() {
                 <td>
                   {user?.role !== 'super_admin' ? (
                     <select value={task.status} onChange={(e) => handleUpdateStatus(task.id, e.target.value)} className="input" style={{ width: '150px' }}>
-                      <option>pending</option>
+                      <option>todo</option>
                       <option>in_progress</option>
                       <option>completed</option>
                     </select>
