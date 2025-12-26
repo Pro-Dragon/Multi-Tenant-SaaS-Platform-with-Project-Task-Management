@@ -98,10 +98,8 @@ export function TasksPage() {
       await apiService.createTask(token, formData.title, formData.description, formData.projectId, formData.priority, formData.status);
       setFormData({ title: '', description: '', projectId: selectedProjectId, priority: 'medium', status: 'pending' });
       setShowForm(false);
-      const tasksList = await apiService.listTasks(token, selectedProjectId || undefined);
-      // Response structure: { tasks: [...], total, pagination } OR just array for legacy
-      const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
-      setTasks(tasksData);
+      // Refresh data to show the new task
+      await fetchData();
     } catch (err) {
       setSubmitError(err.message || 'Failed to create task');
     }
@@ -111,10 +109,8 @@ export function TasksPage() {
     if (!window.confirm('Are you sure?')) return;
     try {
       await apiService.deleteTask(token, taskId);
-      const tasksList = await apiService.listTasks(token, selectedProjectId || undefined);
-      // Response structure: { tasks: [...], total, pagination } OR just array for legacy
-      const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
-      setTasks(tasksData);
+      // Refresh data to remove the deleted task
+      await fetchData();
     } catch (err) {
       alert('Failed to delete task: ' + err.message);
     }
@@ -124,10 +120,8 @@ export function TasksPage() {
     try {
       const task = tasks.find((t) => t.id === taskId);
       await apiService.updateTask(token, taskId, task.title, task.description, status, task.priority);
-      const tasksList = await apiService.listTasks(token, selectedProjectId || undefined);
-      // Response structure: { tasks: [...], total, pagination } OR just array for legacy
-      const tasksData = Array.isArray(tasksList) ? tasksList : (tasksList.tasks || []);
-      setTasks(tasksData);
+      // Refresh data to show the updated status
+      await fetchData();
     } catch (err) {
       alert('Failed to update task: ' + err.message);
     }
