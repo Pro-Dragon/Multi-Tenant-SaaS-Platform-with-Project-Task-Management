@@ -100,7 +100,7 @@ export async function updateTask(req: AuthRequest, res: Response) {
     const data: any = {};
     if (title) data.title = title;
     if (description !== undefined) data.description = description || null;
-    if (status) data.status = status;
+    if (status !== undefined) data.status = status;
     if (priority) data.priority = priority;
     if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
     if (assignedTo !== undefined) data.assignedTo = assignedTo || null;
