@@ -17,6 +17,7 @@ export function TasksPage() {
   const [formData, setFormData] = useState({ title: '', description: '', projectId, priority: 'medium', status: 'pending' });
   const [submitError, setSubmitError] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const [hasUserSelectedProject, setHasUserSelectedProject] = useState(false);
 
   useEffect(() => {
     // Only fetch data after auth is done loading, we have token, user, and either user has tenantId or super admin has selected one
@@ -44,13 +45,15 @@ export function TasksPage() {
       const projectsData = Array.isArray(projectsList) ? projectsList : (projectsList.projects || []);
       setProjects(projectsData);
       
-      // Auto-select first project if no project is selected (for super admin)
+      // Auto-select first project only on initial load for super admin (if user hasn't manually selected)
       let projectToLoad = selectedProjectId;
-      if (!projectToLoad && projectsData.length > 0 && user?.role === 'super_admin') {
+      if (!projectToLoad && projectsData.length > 0 && user?.role === 'super_admin' && !hasUserSelectedProject) {
         projectToLoad = projectsData[0].id;
         setSelectedProjectId(projectsData[0].id);
+        setHasUserSelectedProject(true);
       }
       
+      // Fetch tasks only if a specific project is selected
       if (projectToLoad) {
         const tasksList = await apiService.listTasks(token, projectToLoad);
         // Response structure: { tasks: [...], total, pagination } OR just array for legacy
@@ -126,7 +129,10 @@ export function TasksPage() {
 
       <div className="card" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <label style={{ fontWeight: 700 }}>Filter by Project:</label>
-        <select value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value)} className="input" style={{ width: '240px' }}>
+        <select value={selectedProjectId} onChange={(e) => { 
+          setSelectedProjectId(e.target.value);
+          setHasUserSelectedProject(true);
+        }} className="input" style={{ width: '240px' }}>
           <option value="">All Projects</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
