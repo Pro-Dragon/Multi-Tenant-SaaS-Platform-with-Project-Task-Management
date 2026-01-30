@@ -34,7 +34,7 @@ A production-ready multi-tenant SaaS application with comprehensive project and 
 ┌─────────────────────────────────────────────────────────┐
 │              Database (PostgreSQL 15)                   │
 │         localhost:5432                                  │
-│  • Tenant, User, Project, Task, AuditLog tables        │
+│  • Tenant, User, Project, Task, AuditLog tables         │
 │  • Prisma ORM with migrations                           │
 └─────────────────────────────────────────────────────────┘
 ```
