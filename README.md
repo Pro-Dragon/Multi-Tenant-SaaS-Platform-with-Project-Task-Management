@@ -53,7 +53,7 @@ docker-compose up -d
 Services will be available at:
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:5000/api
-- **Database:** localhost:5432
+- **Database:** localhost:5432 (PostgreSQL 15)
 
 ### Check Status
 ```bash
@@ -68,8 +68,10 @@ docker-compose down
 ```
 
 ## � Evaluator Quick Links
+
 **Demo & Testing:**
 - [DEMO_TESTING.md](DEMO_TESTING.md) - Complete step-by-step walkthrough with expected outputs for all features
+
 **Database & Schema:**
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - 5 tables with complete documentation (Tenant, User, Project, Task, AuditLog)
 
