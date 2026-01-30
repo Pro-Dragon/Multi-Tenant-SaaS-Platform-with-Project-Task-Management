@@ -67,7 +67,27 @@ All containers should show `Healthy` or `Running` status.
 docker-compose down
 ```
 
-## 📱 Using the Application
+## � Evaluator Quick Links
+**Demo & Testing:**
+- [DEMO_TESTING.md](DEMO_TESTING.md) - Complete step-by-step walkthrough with expected outputs for all features
+**Database & Schema:**
+- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - 5 tables with complete documentation (Tenant, User, Project, Task, AuditLog)
+
+**API Testing:**
+- [API_TESTING_GUIDE.md](API_TESTING_GUIDE.md) - Curl commands for all 19 endpoints
+- [docs/API.md](docs/API.md) - Complete API endpoint documentation
+
+**System Design:**
+- [docs/architecture.md](docs/architecture.md) - System architecture and ERD diagram
+- [docs/technical-spec.md](docs/technical-spec.md) - Setup and configuration guide
+
+**Project Requirements:**
+- [docs/PRD.md](docs/PRD.md) - 20+ functional requirements
+- [docs/research.md](docs/research.md) - Research document (1700+ words)
+
+---
+
+## �📱 Using the Application
 
 ### 1. Login (Demo)
 Navigate to **http://localhost:3000** and login with:
@@ -115,9 +135,20 @@ In Tasks, you can:
 - Track status (pending/in_progress/completed)
 - Update and delete tasks
 
-## 📚 API Documentation
+## 📚 Documentation
 
-Comprehensive API documentation is available in [docs/API.md](docs/API.md)
+### Core Documentation Files
+- **[API.md](docs/API.md)** - Complete API documentation for all 19 endpoints
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Database schema with 5 tables (Tenant, User, Project, Task, AuditLog)
+- **[API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)** - Curl examples and testing guide for all endpoints
+- **[architecture.md](docs/architecture.md)** - System architecture and design decisions
+- **[technical-spec.md](docs/technical-spec.md)** - Technical specifications and setup instructions
+- **[research.md](docs/research.md)** - Research document (1700+ words on multi-tenancy)
+- **[PRD.md](docs/PRD.md)** - Product requirements with 20+ functional requirements
+
+### API Testing Guide
+
+For comprehensive testing examples with all 19 endpoints, see [API_TESTING_GUIDE.md](API_TESTING_GUIDE.md)
 
 ### Quick API Example
 
@@ -127,12 +158,17 @@ curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@demo.com",
-    "password": "demo123",
+    "password": "Demo@123",
     "tenantSubdomain": "demo"
   }'
 ```
 
-**Create Project:**
+**Health Check:**
+```bash
+curl http://localhost:5000/api/health
+```
+
+**Create Project (requires token):**
 ```bash
 curl -X POST http://localhost:5000/api/tenants/{tenantId}/projects \
   -H "Content-Type: application/json" \

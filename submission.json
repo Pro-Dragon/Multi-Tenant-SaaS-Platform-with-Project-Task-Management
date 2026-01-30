@@ -218,9 +218,10 @@
     "docs/architecture.md - System architecture and design decisions",
     "docs/technical-spec.md - Technical specifications and setup guide",
     "docs/research.md - Research document (1700+ words)",
-    "DATABASE_SCHEMA.md - Complete database schema documentation (NEW)",
-    "API_TESTING_GUIDE.md - Complete testing guide for all endpoints (NEW)",
-    "README.md - Quick start and feature overview"
+    "DATABASE_SCHEMA.md - Complete database schema documentation (5 tables, relationships, migrations)",
+    "API_TESTING_GUIDE.md - Complete testing guide with curl commands for all 19 endpoints",
+    "DEMO_TESTING.md - Step-by-step demo walkthrough with expected outputs",
+    "README.md - Quick start and feature overview with evaluator guide"
   ],
   "gitCommits": {
     "total": 46,
