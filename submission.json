@@ -4,7 +4,8 @@
   "deploymentUrl": {
     "frontend": "http://localhost:3000",
     "backend": "http://localhost:5000/api",
-    "database": "localhost:5432"
+    "database": "localhost:5432",
+    "note": "Application runs locally via Docker Compose. Start with: docker-compose up -d"
   },
   "technologies": {
     "frontend": "React 18.2.0 + Vite + React Router v6",
@@ -211,6 +212,20 @@
     "Type generation for Prisma models"
   ],
   "docsLocation": "docs/API.md",
+  "documentationFiles": [
+    "docs/API.md - Complete API documentation for all 19 endpoints",
+    "docs/PRD.md - Product requirements document with 20+ functional requirements",
+    "docs/architecture.md - System architecture and design decisions",
+    "docs/technical-spec.md - Technical specifications and setup guide",
+    "docs/research.md - Research document (1700+ words)",
+    "DATABASE_SCHEMA.md - Complete database schema documentation (NEW)",
+    "API_TESTING_GUIDE.md - Complete testing guide for all endpoints (NEW)",
+    "README.md - Quick start and feature overview"
+  ],
+  "gitCommits": {
+    "total": 46,
+    "note": "46 commits with comprehensive development history showing feature implementation, bug fixes, and enhancements"
+  },
   "notes": [
     "All times are stored in UTC in database",
     "Tokens expire after 24 hours of issuance",
